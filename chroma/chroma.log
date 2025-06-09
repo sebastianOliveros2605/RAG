@@ -1,0 +1,24 @@
+[33mWARNING[0m:  [09-06-2025 00:56:07] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048576. chroma_server_nofile will not be set.
+[32mINFO[0m:     [09-06-2025 00:56:07] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [09-06-2025 00:56:07] Starting component System
+[36mDEBUG[0m:    [09-06-2025 00:56:07] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [09-06-2025 00:56:07] Starting component SimpleAssignmentPolicy
+[36mDEBUG[0m:    [09-06-2025 00:56:07] Starting component SqliteDB
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Starting component QuotaEnforcer
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Starting component Posthog
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Starting component SegmentAPI
+[32mINFO[0m:     [09-06-2025 00:56:08] Started server process [[36m38575[0m]
+[32mINFO[0m:     [09-06-2025 00:56:08] Waiting for application startup.
+[32mINFO[0m:     [09-06-2025 00:56:08] Application startup complete.
+[31mERROR[0m:    [09-06-2025 00:56:08] [Errno 98] error while attempting to bind on address ('127.0.0.1', 8000): address already in use
+[32mINFO[0m:     [09-06-2025 00:56:08] Waiting for application shutdown.
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Stopping component System
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Stopping component SegmentAPI
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Stopping component LocalSegmentManager
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Stopping component Posthog
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Stopping component QuotaEnforcer
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Stopping component SqliteDB
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Stopping component SimpleAssignmentPolicy
+[36mDEBUG[0m:    [09-06-2025 00:56:08] Stopping component OpenTelemetryClient
+[32mINFO[0m:     [09-06-2025 00:56:08] Application shutdown complete.
