@@ -1,78 +1,101 @@
 import streamlit as st
 import requests
+import re
 
 SERVER_URL = "http://ec2-44-193-22-242.compute-1.amazonaws.com:8000"
 
-st.set_page_config(page_title="Cliente RAG Médica", layout="wide")
-st.title("🧠 Cliente RAG - Consulta médica con contexto visual")
+# 🧠 Configuración general
+st.set_page_config(page_title="Asistente con RAG", layout="centered")
+st.markdown("""
+    <style>
+        .chat-response {
+            background-color: #f1f3f5;
+            padding: 1.2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 1.5rem;
+        }
+        .user-input {
+            font-size: 1.2rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["🔍 Consultar", "➕ Agregar datos"])
+# 🏥 Título principal
+st.title("🧠 Asistente con RAG")
 
-with tab1:
-    st.header("Buscar información médica")
-    query = st.text_input("Ingresa tu pregunta o síntoma:", "")
-    top_k = st.slider("Número de resultados", min_value=1, max_value=5, value=3)
+# 🔍 Entrada del usuario
+query = st.text_input("💬 ¿Cuál es tu consulta?", "", placeholder="Ej: ¿Qué es Machu Pichu?")
+top_k = st.slider("🔎 ¿Cuántas fuentes quieres consultar?", min_value=1, max_value=5, value=3)
 
-    if st.button("Buscar"):
+col_button = st.container()
+with col_button:
+    if st.button("🚀 Obtener Respuesta", use_container_width=True, key="search_button_main"):
         if not query.strip():
-            st.warning("Debes ingresar una consulta.")
+            st.warning("¡Oops! Parece que olvidaste escribir tu pregunta. Intenta de nuevo.")
         else:
-            # 🔄 Usa el endpoint /query_llm (no /search)
-            response = requests.post(
-                f"{SERVER_URL}/query_llm",
-                json={"query": query, "top_k": top_k}
-            )
+            with st.spinner("Buscando y tejiendo una respuesta inteligente..."):
+                try:
+                    response = requests.post(
+                        f"{SERVER_URL}/query_llm",
+                        json={"query": query, "top_k": top_k},
+                        timeout=360
+                    )
+                    response.raise_for_status()
 
-            if response.ok:
-                data = response.json()
-                st.subheader("Respuesta del modelo:")
-                st.write(data.get("respuesta", "No se obtuvo respuesta."))
-                print(data)
-                # 👁 Mostrar imagen si viene
-                image_url = data.get("suggested_image")
-                if image_url:
-                    st.markdown("### Imagen sugerida:")
-                    st.image(image_url, use_column_width=True)
-            else:
-                st.error(f"Error al consultar: {response.text}")
+                    data = response.json()
 
-with tab2:
-    st.header("Agregar nuevo contenido")
+                    # --- Expander con detalles técnicos ---
+                    with st.expander("🧪 Ver Detalles Técnicos (para desarrolladores)"):
+                        st.json(data)
+                        st.write(f"URL del servidor: {SERVER_URL}")
 
-    tipo = st.selectbox("Tipo de contenido", ["Texto", "Imagen", "PDF"])
-    title = st.text_input("Título del documento (opcional):")
-    source_url = st.text_input("Fuente o URL (opcional):")
-    tags = st.text_input("Etiquetas (separadas por coma):")
+                    # --- Procesamiento de respuesta ---
+                    raw_response = data.get("respuesta", "")
+                    clean_response = ""
 
-    if tipo == "Texto":
-        texto = st.text_area("Texto")
-        if st.button("Agregar texto"):
-            if texto.strip():
-                resp = requests.post(
-                    f"{SERVER_URL}/add",
-                    data={
-                        "text": texto,
-                        "title": title,
-                        "source_url": source_url,
-                        "tags": tags,
-                    }
-                )
-                st.success(resp.json())
-            else:
-                st.warning("El texto no puede estar vacío.")
+                    match = re.search(r"model (.*)", raw_response, re.DOTALL)
+                    if match:
+                        clean_response = match.group(1).strip()
+                    else:
+                        clean_response = raw_response.strip()
 
-    elif tipo == "Imagen":
-        imagen = st.file_uploader("Sube una imagen", type=["png", "jpg", "jpeg"])
-        if imagen and st.button("Agregar imagen"):
-            files = {"image_file": imagen}
-            data = {"title": title, "source_url": source_url, "tags": tags}
-            resp = requests.post(f"{SERVER_URL}/add", files=files, data=data)
-            st.success(resp.json())
+                    if clean_response:
+                        st.markdown('<p class="section-title">🤖 Respuesta del asistente:</p>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="chat-response">{clean_response}</div>', unsafe_allow_html=True)
+                    else:
+                        st.info("Lo siento, no pude encontrar una respuesta relevante. Intenta reformular tu pregunta.")
 
-    elif tipo == "PDF":
-        pdf = st.file_uploader("Sube un archivo PDF", type=["pdf"])
-        if pdf and st.button("Agregar PDF"):
-            files = {"pdf_file": pdf}
-            data = {"title": title, "source_url": source_url, "tags": tags}
-            resp = requests.post(f"{SERVER_URL}/add", files=files, data=data)
-            st.success(resp.json())
+                    # --- Imagen sugerida (si aplica) ---
+                    image_url = data.get("suggested_image")
+                    if image_url:
+                        if not image_url.startswith("http"):
+                            if image_url.startswith("/"):
+                                image_url = f"{SERVER_URL}{image_url}"
+                            else:
+                                image_url = f"{SERVER_URL}/images/{image_url}"
+
+                        st.markdown('<p class="section-title">🖼️ Imagen relacionada:</p>', unsafe_allow_html=True)
+                        st.image(image_url.strip(), use_container_width=True, caption="Sugerida por el modelo")
+                    else:
+                        st.info("No se encontró una imagen relevante para esta consulta.")
+
+                except requests.exceptions.RequestException as e:
+                    st.error("⚠️ ¡Error al contactar el servidor! Asegúrate de que esté disponible.")
+                    if 'response' in locals() and response is not None:
+                        with st.expander("📋 Información adicional del error"):
+                            st.write(f"Código HTTP: {response.status_code}")
+                            st.write(f"Respuesta del servidor: {response.text}")
+                    st.exception(e)
+                except Exception as e:
+                    st.error("❌ Ha ocurrido un error inesperado.")
+                    st.exception(e)
+
+# 🔚 Pie de página
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: gray;'>🧠 Impulsado por RAG Multimodal • 2025</p>", unsafe_allow_html=True)
