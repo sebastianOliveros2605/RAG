@@ -1,1 +1,3 @@
-Creación de la Rama Main
+curl -X POST http://ec2-44-193-22-242.compute-1.amazonaws.com:8000/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "maravillas naturales", "top_k": 2}'
